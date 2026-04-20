@@ -1,0 +1,13 @@
+{
+  "apk_path": "C:\\Users\\wsnbb\\Desktop\\AUTO W\\智巡草原.apk",
+  "package_name": "com.pasture.inspection",
+  "resolved_launcher": "com.pasture.inspection/.MainActivity",
+  "verified_device": "127.0.0.1:16384",
+  "install_result": "Success",
+  "launch_test": "monkey launcher success",
+  "notes": [
+    "静态解析已识别核心包名。",
+    "实际可启动入口由设备侧 resolve-activity 确认。",
+    "配置已固化到 config.json，可在 GUI 直接安装与启动。"
+  ]
+}

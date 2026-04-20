@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+ <title>智巡草原 · 牧区无人巡检系统 (API 接口版)</title>
+ <link rel="preconnect" href="https://fonts.googleapis.com">
+ <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+ <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600&display=swap" rel="stylesheet">
+ <style>
+ /* 样式保持与之前基本一致，仅做微调 */
+ * { margin: 0; padding: 0; box-sizing: border-box; }
+ body {
+ font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+ background: #f0f5ef;
+ background-image: radial-gradient(circle at 10% 20%, rgba(166, 203, 148, 0.15) 0%, transparent 30%),
+ radial-gradient(circle at 90% 70%, rgba(90, 130, 100, 0.08) 0%, transparent 40%);
+ min-height: 100vh;
+ padding: 20px 16px 32px;
+ color: #1e3420;
+ }
+ .dashboard { max-width: 1400px; margin: 0 auto; }
+ .header {
+ display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+ margin-bottom: 28px;
+ }
+ .title-section h1 {
+ font-weight: 600; font-size: 2rem; letter-spacing: -0.02em; color: #1a3b1e;
+ display: flex; align-items: center; gap: 10px;
+ }
+ .title-section h1 span {
+ background: #2c5e2e20; padding: 4px 14px; border-radius: 40px;
+ font-size: 0.9rem; font-weight: 500; color: #2a5c2d;
+ border: 1px solid #87ab7c40; backdrop-filter: blur(4px);
+ }
+ .subhead { color: #3a5a3a; margin-top: 6px; font-weight: 400; display: flex; gap: 24px; }
+ .status-badge {
+ background: #eaf3e6; padding: 8px 20px; border-radius: 60px; font-size: 0.9rem;
+ font-weight: 500; box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+ border: 1px solid #bcd0ae; color: #1e4a1e;
+ }
+ .badge-dot {
+ display: inline-block; width: 10px; height: 10px; border-radius: 10px;
+ background: #2e9a4c; margin-right: 8px; box-shadow: 0 0 0 2px #a4d6a4;
+ }
+ .grid-4 {
+ display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 28px;
+ }
+ .stat-card {
+ background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(10px);
+ border-radius: 28px; padding: 22px 20px;
+ box-shadow: 0 15px 30px -10px rgba(30, 50, 20, 0.12);
+ border: 1px solid rgba(180, 210, 160, 0.3);
+ }
+ .stat-title { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px; color: #4f6b4a; margin-bottom: 12px; }
+ .stat-value { font-size: 2.8rem; font-weight: 600; color: #1d3b1d; line-height: 1.1; margin-bottom: 8px; }
+ .stat-trend { font-size: 0.85rem; color: #3f6b3f; }
+ .two-columns { display: grid; grid-template-columns: 1.5fr 1fr; gap: 22px; margin-bottom: 28px; }
+ .panel {
+ background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px);
+ border-radius: 28px; padding: 24px 22px;
+ border: 1px solid rgba(160, 200, 140, 0.25);
+ box-shadow: 0 12px 28px -8px rgba(20, 40, 10, 0.08);
+ }
+ .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+ .panel-header h3 { font-weight: 600; font-size: 1.3rem; color: #1e3f1e; }
+ .tag { background: #e4f0de; border-radius: 30px; padding: 4px 14px; font-size: 0.8rem; color: #2e612e; }
+ .device-list { display: flex; flex-direction: column; gap: 16px; }
+ .device-item { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #c8ddbc; padding-bottom: 12px; }
+ .device-info { display: flex; align-items: center; gap: 12px; }
+ .device-icon { width: 42px; height: 42px; background: #dff0d3; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+ .device-name { font-weight: 600; }
+ .device-meta { font-size: 0.8rem; color: #54734b; }
+ .status-online { color: #1e7e34; background: #dff0da; padding: 5px 12px; border-radius: 40px; font-size: 0.8rem; font-weight: 500; }
+ .status-offline { color: #a94442; background: #f8dddc; padding: 5px 12px; border-radius: 40px; }
+ .alert-item {
+ background: #fff9e6; border-left: 6px solid #e6a020; padding: 16px;
+ border-radius: 18px; margin-bottom: 14px; box-shadow: 0 4px 8px rgba(0,0,0,0.02);
+ }
+ .alert-critical { border-left-color: #c72a2a; background: #fff3f0; }
+ .alert-title { font-weight: 600; margin-bottom: 6px; display: flex; gap: 10px; }
+ .alert-time { color: #6f6f6f; font-size: 0.75rem; margin-top: 6px; }
+ .ocr-preview {
+ background: #1b2a1b; color: #b9e6b3; padding: 18px; border-radius: 18px;
+ font-family: 'SF Mono', 'Menlo', monospace; font-size: 0.9rem; margin-top: 18px;
+ }
+ .btn {
+ background: #2d5a2d; color: white; border: none; padding: 12px 24px;
+ border-radius: 48px; font-weight: 500; font-size: 1rem; cursor: pointer;
+ box-shadow: 0 8px 16px -6px #1e421e60; transition: 0.15s;
+ border: 1px solid #6fa36f;
+ }
+ .btn-outline { background: transparent; color: #1e421e; box-shadow: none; border: 1px solid #7da064; }
+ .btn:hover { transform: scale(0.97); background: #1f471f; }
+ .btn-outline:hover { background: #e1f0d6; }
+ .footer-note {
+ margin-top: 30px; font-size: 0.8rem; color: #527a4a; text-align: center;
+ border-top: 1px dashed #b6d2a8; padding-top: 20px;
+ }
+ .api-indicator {
+ display: inline-block; background: #1e3a5f; color: white; padding: 2px 10px;
+ border-radius: 20px; font-size: 0.7rem; margin-left: 12px;
+ }
+ .mobile-nav {
+ display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px;
+ margin-bottom: 22px;
+ }
+ .nav-btn {
+ border: 1px solid #b8d2ab; background: rgba(255,255,255,0.78); color: #245025;
+ border-radius: 20px; padding: 12px 10px; font-size: 0.92rem; font-weight: 600;
+ cursor: pointer; transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease;
+ }
+ .nav-btn.active {
+ background: #2d5a2d; color: #fff; box-shadow: 0 10px 18px -10px rgba(30, 66, 30, 0.65);
+ }
+ .nav-btn:hover { transform: translateY(-1px); }
+ .page-section { display: none; animation: fadeIn 0.2s ease; }
+ .page-section.active { display: block; }
+ .single-column { display: grid; grid-template-columns: 1fr; gap: 22px; margin-bottom: 28px; }
+ .compact-note { font-size: 0.82rem; color: #54734b; margin-top: 10px; }
+
+ @media (max-width: 1200px) {
+ .dashboard { max-width: 1000px; }
+ .stat-value { font-size: clamp(2rem, 5vw, 2.6rem); }
+ }
+
+ @media (max-width: 900px) {
+ .grid-4 { grid-template-columns: repeat(2, 1fr); }
+ .two-columns { grid-template-columns: 1fr; }
+ .mobile-nav { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+ .header { gap: 16px; }
+ .subhead { flex-direction: column; gap: 10px; }
+ }
+
+ @media (max-width: 680px) {
+ body { padding: 14px 10px 28px; }
+ .title-section h1 { font-size: 1.45rem; line-height: 1.25; flex-wrap: wrap; }
+ .panel, .stat-card { border-radius: 20px; padding: 18px 16px; }
+ .ocr-preview { font-size: 0.82rem; white-space: pre-wrap; word-break: break-word; }
+ .mobile-nav { grid-template-columns: 1fr 1fr; }
+ .admin-row, .admin-device-row, .admin-alert-row { grid-template-columns: 1fr; }
+ }
+
+ @media (max-width: 480px) {
+ .grid-4 { grid-template-columns: 1fr; }
+ .mobile-nav { grid-template-columns: 1fr; }
+ .btn, .btn-outline, .nav-btn { width: 100%; }
+ }
+
+ @media (orientation: landscape) and (max-height: 520px) {
+ body { padding-top: 12px; }
+ .header { margin-bottom: 18px; }
+ .grid-4 { grid-template-columns: repeat(4, 1fr); gap: 14px; }
+ .stat-card { padding: 16px 14px; }
+ .stat-value { font-size: 1.9rem; }
+ }
+
+ @media (prefers-reduced-motion: reduce) {
+ .page-section, .nav-btn, .btn { animation: none; transition: none; }
+ }
+
+ /* ========== 隐藏管理面板样式 ========== */
+ .admin-overlay {
+ display: none; position: fixed; inset: 0; z-index: 9999;
+ background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);
+ justify-content: center; align-items: center;
+ animation: fadeIn 0.2s ease;
+ }
+ .admin-overlay.active { display: flex; }
+ @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+ .admin-panel {
+ background: #1a2e1a; color: #c8e6c0; border-radius: 24px;
+ width: 94%; max-width: 600px; max-height: 88vh; overflow-y: auto;
+ padding: 28px 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+ border: 1px solid #3a6a3a;
+ }
+ .admin-panel::-webkit-scrollbar { width: 6px; }
+ .admin-panel::-webkit-scrollbar-thumb { background: #3a6a3a; border-radius: 3px; }
+ .admin-panel h2 {
+ font-size: 1.3rem; font-weight: 600; color: #8fd48f; margin-bottom: 6px;
+ display: flex; align-items: center; gap: 8px;
+ }
+ .admin-panel .admin-subtitle { font-size: 0.8rem; color: #6a9a6a; margin-bottom: 20px; }
+ .admin-section {
+ background: rgba(255,255,255,0.05); border-radius: 16px; padding: 16px;
+ margin-bottom: 16px; border: 1px solid #2a4a2a;
+ }
+ .admin-section h4 {
+ font-size: 0.95rem; color: #a0d8a0; margin-bottom: 12px;
+ padding-bottom: 8px; border-bottom: 1px solid #2a4a2a;
+ }
+ .admin-row {
+ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;
+ }
+ .admin-field { display: flex; flex-direction: column; gap: 4px; }
+ .admin-field.full { grid-column: 1 / -1; }
+ .admin-field label { font-size: 0.8rem; color: #7ab07a; }
+ .admin-field input, .admin-field textarea, .admin-field select {
+ background: #0d1f0d; border: 1px solid #3a6a3a; border-radius: 10px;
+ color: #d0f0c8; padding: 10px 12px; font-size: 0.9rem; font-family: inherit;
+ outline: none; transition: border-color 0.2s;
+ }
+ .admin-field input:focus, .admin-field textarea:focus, .admin-field select:focus {
+ border-color: #6aaa6a;
+ }
+ .admin-field textarea { resize: vertical; min-height: 80px; }
+ .admin-actions { display: flex; gap: 10px; margin-top: 16px; }
+ .admin-btn {
+ flex: 1; padding: 12px; border-radius: 14px; border: none;
+ font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: 0.15s;
+ }
+ .admin-btn-apply { background: #2a8a2a; color: white; }
+ .admin-btn-apply:hover { background: #1e6e1e; }
+ .admin-btn-reset { background: #4a3a2a; color: #e0c8a0; }
+ .admin-btn-reset:hover { background: #3a2a1a; }
+ .admin-btn-close { background: #3a2a2a; color: #e0a0a0; }
+ .admin-btn-close:hover { background: #2a1a1a; }
+ .admin-device-row {
+ display: grid; grid-template-columns: 2fr 1fr 1fr 30px; gap: 8px;
+ margin-bottom: 8px; align-items: center;
+ }
+ .admin-device-row input { padding: 8px 10px; font-size: 0.85rem; }
+ .admin-device-row .remove-btn {
+ background: none; border: none; color: #e08080; font-size: 1.1rem;
+ cursor: pointer; padding: 4px;
+ }
+ .admin-alert-row {
+ display: grid; grid-template-columns: 50px 2fr 1fr; gap: 8px;
+ margin-bottom: 8px; align-items: center;
+ }
+ .admin-alert-row textarea { min-height: 40px; font-size: 0.85rem; }
+ .admin-add-btn {
+ background: #1a3a2a; color: #80c880; border: 1px dashed #3a6a3a;
+ border-radius: 10px; padding: 8px; font-size: 0.85rem; cursor: pointer;
+ width: 100%; margin-top: 6px;
+ }
+ .admin-add-btn:hover { background: #2a4a3a; }
+ .admin-toast {
+ position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+ background: #2a6a2a; color: white; padding: 12px 24px; border-radius: 40px;
+ font-size: 0.9rem; z-index: 10000; box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+ animation: toastIn 0.3s ease;
+ }
+ @keyframes toastIn { from { opacity:0; transform: translateX(-50%) translateY(20px); } to { opacity:1; transform: translateX(-50%) translateY(0); } }
+ </style>
+</head>
+<body>
+<div class="dashboard">
+ <div class="header">
+ <div class="title-section">
+ <h1>
+ 🌾 智巡草原 · 牧区无人巡检
+ <span>v2.1.0 API 集成</span>
+ <span class="api-indicator">RESTful 接口</span>
+ </h1>
+ <div class="subhead">
+ <div>基于多模态感知 · 异构设备控制 · 非侵入OCR</div>
+ <div class="status-badge"><span class="badge-dot"></span> <span id="clusterStatusText">集群在线 · 3节点运行中</span></div>
+ </div>
+ </div>
+ <div style="display: flex; gap: 12px;">
+ <button class="btn-outline btn" id="simulateInspectionBtn">🔍 执行巡检 (调用API)</button>
+ <button class="btn" id="refreshDataBtn">⟳ 刷新数据 (GET /status)</button>
+ </div>
+ </div>
+ <div class="mobile-nav">
+    <button class="nav-btn active" data-page="overview">总览</button>
+    <button class="nav-btn" data-page="devices">设备</button>
+    <button class="nav-btn" data-page="ocr">OCR</button>
+    <button class="nav-btn" data-page="alerts">告警</button>
+   </div>
+ <!-- 总览页 -->
+ <section class="page-section active" data-page="overview">
+    <div class="grid-4">
+     <div class="stat-card">
+      <div class="stat-title"><span>💧 饮水槽监测</span></div>
+      <div class="stat-value" id="waterTempDisplay">--°C</div>
+      <div class="stat-trend" id="waterTrend">加载中...</div>
+     </div>
+     <div class="stat-card">
+      <div class="stat-title"><span>🐄 耳标在线率</span></div>
+      <div class="stat-value" id="earTagRateDisplay">--%</div>
+      <div class="stat-trend" id="earTrend">加载中...</div>
+     </div>
+     <div class="stat-card">
+      <div class="stat-title"><span>📡 终端健康度</span></div>
+      <div class="stat-value" id="batteryDisplay">--%</div>
+      <div class="stat-trend" id="batteryTrend">加载中...</div>
+     </div>
+     <div class="stat-card">
+      <div class="stat-title"><span>🤖 巡检任务</span></div>
+      <div class="stat-value" id="taskCountDisplay">--/12</div>
+      <div class="stat-trend" id="taskTrend">加载中...</div>
+     </div>
+    </div>
+   </section>
+  
+   <!-- 设备页 -->
+   <section class="page-section" data-page="devices">
+    <div class="single-column">
+     <div class="panel">
+      <div class="panel-header">
+       <h3>📱 异构设备控制 · ADB 集群</h3>
+       <div class="tag">单主机多实例</div>
+      </div>
+      <div class="device-list" id="deviceListContainer">
+       <!-- 动态渲染设备列表 -->
+      </div>
+      <div class="compact-note">⚙️ 边缘计算 · 本地决策 · 弱网自愈 (ADB保活中)</div>
+     </div>
+    </div>
+   </section>
+  
+   <!-- OCR页 -->
+   <section class="page-section" data-page="ocr">
+    <div class="single-column">
+     <div class="panel">
+      <div class="panel-header">
+       <h3>📸 OCR 实时识别</h3>
+       <div class="tag">simple_ocr.py</div>
+      </div>
+      <div class="ocr-preview" id="ocrPreview">加载OCR数据...</div>
+     </div>
+    </div>
+   </section>
+  
+   <!-- 告警页 -->
+   <section class="page-section" data-page="alerts">
+    <div class="single-column">
+     <div class="panel">
+      <div class="panel-header">
+       <h3>🚨 实时告警 · 钉钉/企微同步</h3>
+       <div class="tag">闭环追踪</div>
+      </div>
+      <div id="alertContainer">
+       <!-- 动态渲染告警列表 -->
+      </div>
+      <div style="margin-top: 24px; background: #eef3ea; border-radius: 20px; padding: 16px;">
+       <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <span style="background: #1e72b0; color:white; padding:2px 12px; border-radius: 20px;">企业微信</span>
+        <span style="background: #188a4d; color:white; padding:2px 12px; border-radius: 20px;">钉钉</span>
+       </div>
+       <div style="font-size:0.9rem" id="latestPushMessage">
+        加载推送记录...
+       </div>
+      </div>
+      <div style="margin-top: 18px; text-align: right;">
+       <button class="btn-outline" id="simulateAlertBtn">📢 模拟新告警 (POST /alerts)</button>
+      </div>
+     </div>
+    </div>
+   </section>
+   <div class="footer-note">
+    <span>⚡ 分布式集群管理 · 单主机调度3+牧区点位 · 边缘计算 · 非侵入UI语义 · ADB异构控制</span><br>
+    <span>《智巡草原——基于多模态感知的牧区物联网终端无人值守巡检系统》 — 接口版本 (可对接真实后端)</span>
+   </div>
+  </div>
+<!-- ========== 隐藏管理面板 (连续点击标题区域5次打开) ========== -->
+<div class="admin-overlay" id="adminOverlay">
+ <div class="admin-panel">
+  <h2>🔧 参数调试面板 <span style="font-size:0.7rem;background:#3a5a3a;padding:2px 10px;border-radius:20px;color:#a0d0a0;">ADMIN</span></h2>
+  <div class="admin-subtitle">手动输入各项检测数据 · 实时更新到仪表盘 · 数据仅本地生效</div>
+
+  <!-- 核心指标 -->
+  <div class="admin-section">
+   <h4>📊 核心监测指标</h4>
+   <div class="admin-row">
+    <div class="admin-field">
+     <label>💧 饮水槽水温 (°C)</label>
+     <input type="number" step="0.1" id="adminWaterTemp" placeholder="如: -2.3">
+    </div>
+    <div class="admin-field">
+     <label>📊 水温趋势说明</label>
+     <input type="text" id="adminWaterTrend" placeholder="如: ⚠️ 低温告警">
+    </div>
+   </div>
+   <div class="admin-row">
+    <div class="admin-field">
+     <label>🐄 耳标在线率 (%)</label>
+     <input type="number" min="0" max="100" id="adminEarTag" placeholder="如: 94">
+    </div>
+    <div class="admin-field">
+     <label>📊 耳标趋势说明</label>
+     <input type="text" id="adminEarTrend" placeholder="如: 2头离线">
+    </div>
+   </div>
+   <div class="admin-row">
+    <div class="admin-field">
+     <label>📡 终端电量 (%)</label>
+     <input type="number" min="0" max="100" id="adminBattery" placeholder="如: 87">
+    </div>
+    <div class="admin-field">
+     <label>📊 电量趋势说明</label>
+     <input type="text" id="adminBatteryTrend" placeholder="如: 电量正常">
+    </div>
+   </div>
+   <div class="admin-row">
+    <div class="admin-field">
+     <label>🤖 已完成任务数</label>
+     <input type="number" min="0" id="adminTaskDone" placeholder="如: 8">
+    </div>
+    <div class="admin-field">
+     <label>🤖 总任务数</label>
+     <input type="number" min="1" id="adminTaskTotal" placeholder="如: 12">
+    </div>
+   </div>
+   <div class="admin-row">
+    <div class="admin-field full">
+     <label>📊 任务趋势说明</label>
+     <input type="text" id="adminTaskTrend" placeholder="如: 今日已完成 · 成功率98%">
+    </div>
+   </div>
+   <div class="admin-row">
+    <div class="admin-field full">
+     <label>🌐 集群状态</label>
+     <input type="text" id="adminClusterStatus" placeholder="如: 集群在线 · 3节点运行中">
+    </div>
+   </div>
+  </div>
+
+  <!-- 设备列表 -->
+  <div class="admin-section">
+   <h4>📱 设备列表</h4>
+   <div id="adminDeviceList"></div>
+   <button class="admin-add-btn" id="adminAddDeviceBtn">+ 添加设备</button>
+  </div>
+
+  <!-- OCR 内容 -->
+  <div class="admin-section">
+   <h4>📸 OCR 识别内容</h4>
+   <div class="admin-field full">
+    <textarea id="adminOcrText" rows="4" placeholder="输入 OCR 识别结果文本&#10;如: > [15:23:41] 饮水槽App · 识别结果:&#10;> 水温: -2.3°C | 水位: 87%"></textarea>
+   </div>
+  </div>
+
+  <!-- 告警列表 -->
+  <div class="admin-section">
+   <h4>🚨 告警列表</h4>
+   <div id="adminAlertList"></div>
+   <button class="admin-add-btn" id="adminAddAlertBtn">+ 添加告警</button>
+  </div>
+
+  <!-- 推送消息 -->
+  <div class="admin-section">
+   <h4>📨 推送消息</h4>
+   <div class="admin-row">
+    <div class="admin-field full">
+     <label>推送渠道</label>
+     <select id="adminPushChannel">
+      <option value="企业微信">企业微信</option>
+      <option value="钉钉">钉钉</option>
+      <option value="短信">短信</option>
+      <option value="邮件">邮件</option>
+     </select>
+    </div>
+   </div>
+   <div class="admin-row">
+    <div class="admin-field full">
+     <label>推送标题</label>
+     <input type="text" id="adminPushTitle" placeholder="如: 【智巡草原】饮水槽低温告警">
+    </div>
+   </div>
+   <div class="admin-row">
+    <div class="admin-field full">
+     <label>推送内容</label>
+     <input type="text" id="adminPushContent" placeholder="如: 点位: 北区3号饮水槽 · 水温-2.3°C">
+    </div>
+   </div>
+   <div class="admin-row">
+    <div class="admin-field">
+     <label>已读人数</label>
+     <input type="number" min="0" id="adminPushReadBy" placeholder="2">
+    </div>
+    <div class="admin-field">
+     <label>反馈内容</label>
+     <input type="text" id="adminPushFeedback" placeholder="如: 加热器已手动启动">
+    </div>
+   </div>
+  </div>
+
+  <!-- 操作按钮 -->
+  <div class="admin-actions">
+   <button class="admin-btn admin-btn-apply" id="adminApplyBtn">✅ 应用到仪表盘</button>
+   <button class="admin-btn admin-btn-reset" id="adminResetBtn">🔄 重置当前数据</button>
+   <button class="admin-btn admin-btn-close" id="adminCloseBtn">✕ 关闭</button>
+  </div>
+ </div>
+</div>
+
+<script>
+ (function(){
+ "use strict";
+
+ // ==================== API 服务层 (可替换为真实后端) ====================
+ // 配置基础 URL，后续只需修改此处即可对接真实服务
+ const API_BASE_URL = 'http://localhost:3000/api'; // 示例，实际可改为您的后端地址
+ 
+ // 是否启用真实API调用 (若 false 则使用内置模拟数据，但保留接口调用结构)
+ const USE_REAL_API = false; // 改为 true 并确保后端运行即可对接真实接口
+
+ // 通用请求封装
+ async function apiRequest(endpoint, options = {}) {
+ const url = `${API_BASE_URL}${endpoint}`;
+ const defaultHeaders = { 'Content-Type': 'application/json' };
+ const config = {
+ ...options,
+ headers: { ...defaultHeaders, ...options.headers }
+ };
+ 
+ try {
+ if (!USE_REAL_API) {
+ // 模拟模式：根据 endpoint 返回 mock 数据 (模拟异步)
+ return await mockApiResponse(endpoint, options);
+ }
+ const response = await fetch(url, config);
+ if (!response.ok) {
+ throw new Error(`API 错误: ${response.status}`);
+ }
+ return await response.json();
+ } catch (error) {
+ console.error('API 请求失败:', error);
+ // 降级使用模拟数据以保证界面可用
+ console.warn('降级使用模拟数据');
+ return await mockApiResponse(endpoint, options);
+ }
+ }
+
+ // 模拟 API 响应 (结构与真实接口保持一致)
+ async function mockApiResponse(endpoint, options) {
+ // 模拟网络延迟
+ await new Promise(resolve => setTimeout(resolve, 200));
+ 
+ const method = options?.method || 'GET';
+ const body = options?.body ? JSON.parse(options.body) : null;
+
+ // 根据端点返回模拟数据
+ if (endpoint === '/status' && method === 'GET') {
+ return {
+ code: 0,
+ data: {
+ waterTemp: -2.3,
+ waterTrend: '⚠️ 低温告警 · 已推送',
+ earTagRate: 94,
+ earTrend: '2头离线 · 正在定位',
+ battery: 87,
+ batteryTrend: '电量正常 · 信号-72dBm',
+ taskCompleted: 8,
+ taskTotal: 12,
+ taskTrend: '今日已完成 · 成功率98%',
+ clusterStatus: '集群在线 · 3节点运行中',
+ devices: [
+ { id: 1, name: '红米 Note 11 (饮水槽1)', meta: 'Android 12 · ADB WiFi · 192.168.8.112', status: 'online' },
+ { id: 2, name: '华为畅享 10e (耳标阅读器)', meta: 'Android 10 · USB ADB · 已连接', status: 'online' },
+ { id: 3, name: '工控屏 RK3566 (气象站)', meta: 'Android 11 · 心跳正常 · 保活中', status: 'reconnecting' }
+ ],
+ ocrText: '> [15:23:41] 饮水槽App · 识别结果:\n> 水温: -2.3°C | 水位: 87% | 加热状态: 未启动\n> 告警标签: "低温预警" (置信度0.96)\n> 截图已保存 · 推送企业微信 #饮水槽告警',
+ latestPush: {
+ channel: '企业微信',
+ title: '【智巡草原】饮水槽低温告警',
+ content: '点位: 北区3号饮水槽 · 水温-2.3°C · 请及时处置。',
+ readBy: 2,
+ feedback: '加热器已手动启动'
+ }
+ }
+ };
+ } else if (endpoint === '/alerts' && method === 'GET') {
+ return {
+ code: 0,
+ data: [
+ { id: 1, critical: true, title: '❗ 饮水槽低温告警 (2号槽)', desc: '当前水温 -2.3°C，已触发防冻预警。建议立即检查加热带。', time: '2分钟前' },
+ { id: 2, critical: false, title: '⚠️ 电子耳标离线 (编号 0823 / 0917)', desc: '2头牛耳标信号丢失超过15分钟，请现场确认。', time: '23分钟前' },
+ { id: 3, critical: false, title: '🔋 终端电量异常 · 气象站节点', desc: 'RK3566 电量降至19%，建议连接充电。', time: '8分钟前' }
+ ]
+ };
+ } else if (endpoint === '/inspection/trigger' && method === 'POST') {
+ // 模拟触发巡检后返回新数据
+ return {
+ code: 0,
+ message: '巡检任务已触发',
+ data: {
+ waterTemp: -0.8,
+ waterTrend: '✅ 水温回升 · 正常',
+ earTagRate: 96,
+ earTrend: '全部在线 · 信号良好',
+ battery: 82,
+ batteryTrend: '电量充足',
+ taskCompleted: 9,
+ taskTotal: 12,
+ taskTrend: '巡检进行中',
+ ocrText: `> [${new Date().toLocaleTimeString()}] 自动巡检完成 · 多模态感知:\n> 饮水槽水温正常 · 耳标在线率96% · 终端电量充足\n> 未发现严重告警 · 边缘节点记录已同步\n> ADB保活正常 · 弱网自愈待命中`,
+ devices: [
+ { id: 1, name: '红米 Note 11 (饮水槽1)', meta: 'Android 12 · ADB WiFi', status: 'online' },
+ { id: 2, name: '华为畅享 10e (耳标阅读器)', meta: 'Android 10 · USB ADB', status: 'online' },
+ { id: 3, name: '工控屏 RK3566 (气象站)', meta: 'Android 11 · 保活中', status: 'online' }
+ ],
+ newAlert: { critical: false, title: '✅ 巡检完成 · 系统自愈正常', desc: 'ADB重连测试通过，所有节点在线。', time: '刚刚' }
+ }
+ };
+ } else if (endpoint === '/alerts' && method === 'POST') {
+ const newAlert = {
+ id: Date.now(),
+ critical: body?.critical ?? false,
+ title: body?.title ?? '📢 模拟告警',
+ desc: body?.desc ?? '这是一条模拟的告警消息',
+ time: '刚刚'
+ };
+ return { code: 0, data: newAlert };
+ }
+ 
+ return { code: -1, message: '未知端点' };
+ }
+
+ // ==================== UI 渲染与交互 ====================
+ const waterTempEl = document.getElementById('waterTempDisplay');
+ const waterTrendEl = document.getElementById('waterTrend');
+ const earTagRateEl = document.getElementById('earTagRateDisplay');
+ const earTrendEl = document.getElementById('earTrend');
+ const batteryEl = document.getElementById('batteryDisplay');
+ const batteryTrendEl = document.getElementById('batteryTrend');
+ const taskCountEl = document.getElementById('taskCountDisplay');
+ const taskTrendEl = document.getElementById('taskTrend');
+ const clusterStatusText = document.getElementById('clusterStatusText');
+ const deviceListContainer = document.getElementById('deviceListContainer');
+ const ocrPreviewEl = document.getElementById('ocrPreview');
+ const alertContainer = document.getElementById('alertContainer');
+ const latestPushMessage = document.getElementById('latestPushMessage');
+ 
+ const refreshBtn = document.getElementById('refreshDataBtn');
+ const inspectBtn = document.getElementById('simulateInspectionBtn');
+ const alertSimBtn = document.getElementById('simulateAlertBtn');
+ const navButtons = Array.from(document.querySelectorAll('.nav-btn'));
+ const pageSections = Array.from(document.querySelectorAll('.page-section'));
+
+ function showPage(pageName) {
+  pageSections.forEach(section => {
+   section.classList.toggle('active', section.dataset.page === pageName);
+  });
+  navButtons.forEach(btn => {
+   btn.classList.toggle('active', btn.dataset.page === pageName);
+  });
+ }
+
+ navButtons.forEach(btn => {
+  btn.addEventListener('click', () => showPage(btn.dataset.page));
+ });
+ // 渲染设备列表
+ function renderDevices(devices) {
+ if (!devices || devices.length === 0) return;
+ deviceListContainer.innerHTML = devices.map(dev => {
+ const statusClass = dev.status === 'online' ? 'status-online' : 'status-offline';
+ const statusText = dev.status === 'online' ? '● 在线' : (dev.status === 'reconnecting' ? '⦿ 弱网重连' : '⦿ 离线');
+ return `
+ <div class="device-item">
+ <div class="device-info">
+ <div class="device-icon">📱</div>
+ <div>
+ <div class="device-name">${dev.name}</div>
+ <div class="device-meta">${dev.meta}</div>
+ </div>
+ </div>
+ <div><span class="${statusClass}">${statusText}</span></div>
+ </div>
+ `;
+ }).join('');
+ }
+
+ // 渲染告警列表
+ function renderAlerts(alerts) {
+ if (!alerts || alerts.length === 0) {
+ alertContainer.innerHTML = '<div class="alert-item">暂无告警</div>';
+ return;
+ }
+ alertContainer.innerHTML = alerts.map(alert => `
+ <div class="alert-item ${alert.critical ? 'alert-critical' : ''}">
+ <div class="alert-title">${alert.title}</div>
+ <div>${alert.desc}</div>
+ <div class="alert-time">⏱️ ${alert.time} · 已推送至企业微信/钉钉</div>
+ </div>
+ `).join('');
+ }
+
+ // 渲染推送消息
+ function renderPushMessage(push) {
+ if (!push) return;
+ latestPushMessage.innerHTML = `
+ <div>📨 最新推送记录：</div>
+ <div style="background: white; border-radius: 18px; padding: 12px; margin-top: 10px;">
+ <strong>${push.title}</strong><br>
+ ${push.content}<br>
+ <span style="color:#5f5f5f;">已读: ${push.readBy}人 · 反馈: ${push.feedback}</span>
+ </div>
+ `;
+ }
+
+ // 加载状态数据
+ async function loadStatus() {
+ try {
+ const res = await apiRequest('/status');
+ if (res.code === 0 && res.data) {
+ const d = res.data;
+ waterTempEl.textContent = d.waterTemp.toFixed(1) + '°C';
+ waterTrendEl.textContent = d.waterTrend;
+ earTagRateEl.textContent = d.earTagRate + '%';
+ earTrendEl.textContent = d.earTrend;
+ batteryEl.textContent = d.battery + '%';
+ batteryTrendEl.textContent = d.batteryTrend;
+ taskCountEl.textContent = `${d.taskCompleted}/${d.taskTotal}`;
+ taskTrendEl.textContent = d.taskTrend;
+ clusterStatusText.textContent = d.clusterStatus;
+ 
+ renderDevices(d.devices);
+ ocrPreviewEl.textContent = d.ocrText;
+ renderPushMessage(d.latestPush);
+ }
+ } catch (e) {
+ console.error('加载状态失败', e);
+ }
+ }
+
+ // 加载告警列表
+ async function loadAlerts() {
+ try {
+ const res = await apiRequest('/alerts');
+ if (res.code === 0 && res.data) {
+ renderAlerts(res.data);
+ }
+ } catch (e) {
+ console.error('加载告警失败', e);
+ }
+ }
+
+ // 触发巡检
+ async function triggerInspection() {
+ try {
+ const res = await apiRequest('/inspection/trigger', { method: 'POST' });
+ if (res.code === 0 && res.data) {
+ const d = res.data;
+ waterTempEl.textContent = d.waterTemp.toFixed(1) + '°C';
+ waterTrendEl.textContent = d.waterTrend;
+ earTagRateEl.textContent = d.earTagRate + '%';
+ earTrendEl.textContent = d.earTrend;
+ batteryEl.textContent = d.battery + '%';
+ batteryTrendEl.textContent = d.batteryTrend;
+ taskCountEl.textContent = `${d.taskCompleted}/${d.taskTotal}`;
+ taskTrendEl.textContent = d.taskTrend;
+ renderDevices(d.devices);
+ ocrPreviewEl.textContent = d.ocrText;
+ 
+ if (d.newAlert) {
+ // 将新告警添加到告警列表顶部 (同时重新获取告警)
+ await loadAlerts(); // 简化处理，实际可手动插入
+ } else {
+ await loadAlerts();
+ }
+ // 同时刷新推送消息 (可通过状态接口重新获取)
+ await loadStatus(); 
+ }
+ } catch (e) {
+ console.error('触发巡检失败', e);
+ }
+ }
+
+ // 模拟发送新告警
+ async function sendMockAlert() {
+ const mockBody = {
+ title: '⚠️ 模拟告警: 风机故障',
+ desc: '2号风机电流异常，请检查。',
+ critical: Math.random() > 0.5
+ };
+ try {
+ const res = await apiRequest('/alerts', { method: 'POST', body: JSON.stringify(mockBody) });
+ if (res.code === 0) {
+ await loadAlerts(); // 刷新列表
+ }
+ } catch (e) {
+ console.error('发送告警失败', e);
+ }
+ }
+
+ // 初始化加载所有数据
+ async function init() {
+ await Promise.all([loadStatus(), loadAlerts()]);
+ }
+
+ // 绑定事件
+ refreshBtn.addEventListener('click', async () => {
+ refreshBtn.textContent = '⟳ 刷新中...';
+ await Promise.all([loadStatus(), loadAlerts()]);
+ refreshBtn.textContent = '⟳ 刷新数据 (GET /status)';
+ });
+ 
+ inspectBtn.addEventListener('click', async () => {
+ inspectBtn.textContent = '⏳ 执行中...';
+ await triggerInspection();
+ inspectBtn.textContent = '🔍 执行巡检 (调用API)';
+ });
+ 
+ alertSimBtn.addEventListener('click', sendMockAlert);
+
+ // 启动
+ init();
+ showPage('overview');
+
+ // 键盘快捷键
+ window.addEventListener('keydown', (e) => {
+ if (e.key === 'i' || e.key === 'I') {
+ e.preventDefault();
+ triggerInspection();
+ } else if (e.key === 'r' || e.key === 'R') {
+ e.preventDefault();
+ Promise.all([loadStatus(), loadAlerts()]);
+ }
+ });
+
+ console.log('🌾 智巡草原 API 版本已启动 — 接口可对接真实后端 (修改 USE_REAL_API 与 API_BASE_URL)');
+
+ // ==================== 隐藏管理面板 ====================
+ // 触发方式：连续点击标题区域 5 次（2秒内）
+ const adminOverlay = document.getElementById('adminOverlay');
+ let tapCount = 0, tapTimer = null;
+ document.querySelector('.title-section').addEventListener('click', () => {
+  tapCount++;
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(() => { tapCount = 0; }, 2000);
+  if (tapCount >= 5) {
+   tapCount = 0;
+   openAdminPanel();
+  }
+ });
+
+ // 当前仪表盘数据快照（用于填充面板默认值）
+ let adminData = {
+  waterTemp: -2.3, waterTrend: '⚠️ 低温告警 · 已推送',
+  earTagRate: 94, earTrend: '2头离线 · 正在定位',
+  battery: 87, batteryTrend: '电量正常 · 信号-72dBm',
+  taskDone: 8, taskTotal: 12, taskTrend: '今日已完成 · 成功率98%',
+  clusterStatus: '集群在线 · 3节点运行中',
+  ocrText: '',
+  devices: [
+   { name: '红米 Note 11 (饮水槽1)', meta: 'Android 12 · ADB WiFi · 192.168.8.112', status: 'online' },
+   { name: '华为畅享 10e (耳标阅读器)', meta: 'Android 10 · USB ADB · 已连接', status: 'online' },
+   { name: '工控屏 RK3566 (气象站)', meta: 'Android 11 · 心跳正常 · 保活中', status: 'reconnecting' }
+  ],
+  alerts: [
+   { critical: true, title: '❗ 饮水槽低温告警 (2号槽)', desc: '当前水温 -2.3°C，已触发防冻预警。', time: '2分钟前' },
+   { critical: false, title: '⚠️ 电子耳标离线 (编号 0823)', desc: '2头牛耳标信号丢失超过15分钟。', time: '23分钟前' }
+  ],
+  pushChannel: '企业微信',
+  pushTitle: '【智巡草原】饮水槽低温告警',
+  pushContent: '点位: 北区3号饮水槽 · 水温-2.3°C · 请及时处置。',
+  pushReadBy: 2,
+  pushFeedback: '加热器已手动启动'
+ };
+
+ function openAdminPanel() {
+  // 同步当前仪表盘显示值到面板
+  adminData.ocrText = ocrPreviewEl.textContent || adminData.ocrText;
+  fillAdminForm();
+  adminOverlay.classList.add('active');
+ }
+
+ function fillAdminForm() {
+  document.getElementById('adminWaterTemp').value = adminData.waterTemp;
+  document.getElementById('adminWaterTrend').value = adminData.waterTrend;
+  document.getElementById('adminEarTag').value = adminData.earTagRate;
+  document.getElementById('adminEarTrend').value = adminData.earTrend;
+  document.getElementById('adminBattery').value = adminData.battery;
+  document.getElementById('adminBatteryTrend').value = adminData.batteryTrend;
+  document.getElementById('adminTaskDone').value = adminData.taskDone;
+  document.getElementById('adminTaskTotal').value = adminData.taskTotal;
+  document.getElementById('adminTaskTrend').value = adminData.taskTrend;
+  document.getElementById('adminClusterStatus').value = adminData.clusterStatus;
+  document.getElementById('adminOcrText').value = adminData.ocrText;
+  document.getElementById('adminPushChannel').value = adminData.pushChannel;
+  document.getElementById('adminPushTitle').value = adminData.pushTitle;
+  document.getElementById('adminPushContent').value = adminData.pushContent;
+  document.getElementById('adminPushReadBy').value = adminData.pushReadBy;
+  document.getElementById('adminPushFeedback').value = adminData.pushFeedback;
+  renderAdminDevices();
+  renderAdminAlerts();
+ }
+
+ // 渲染设备行
+ function renderAdminDevices() {
+  const container = document.getElementById('adminDeviceList');
+  container.innerHTML = adminData.devices.map((d, i) => `
+   <div class="admin-device-row" data-idx="${i}">
+    <input type="text" class="dev-name" value="${d.name}" placeholder="设备名称">
+    <input type="text" class="dev-meta" value="${d.meta}" placeholder="设备信息">
+    <select class="dev-status">
+     <option value="online" ${d.status==='online'?'selected':''}>在线</option>
+     <option value="reconnecting" ${d.status==='reconnecting'?'selected':''}>弱网重连</option>
+     <option value="offline" ${d.status==='offline'?'selected':''}>离线</option>
+    </select>
+    <button class="remove-btn" onclick="removeAdminDevice(${i})">✕</button>
+   </div>
+  `).join('');
+ }
+
+ // 渲染告警行
+ function renderAdminAlerts() {
+  const container = document.getElementById('adminAlertList');
+  container.innerHTML = adminData.alerts.map((a, i) => `
+   <div class="admin-alert-row" data-idx="${i}">
+    <select class="alert-level">
+     <option value="0" ${!a.critical?'selected':''}>⚠️ 普通</option>
+     <option value="1" ${a.critical?'selected':''}>❗ 严重</option>
+    </select>
+    <textarea class="alert-content" placeholder="告警标题 | 描述 | 时间（用|分隔）">${a.title}|${a.desc}|${a.time}</textarea>
+    <button class="remove-btn" onclick="removeAdminAlert(${i})">✕</button>
+   </div>
+  `).join('');
+ }
+
+ window.removeAdminDevice = (i) => { adminData.devices.splice(i, 1); renderAdminDevices(); };
+ window.removeAdminAlert = (i) => { adminData.alerts.splice(i, 1); renderAdminAlerts(); };
+
+ document.getElementById('adminAddDeviceBtn').addEventListener('click', () => {
+  adminData.devices.push({ name: '新设备', meta: 'Android · ADB', status: 'online' });
+  renderAdminDevices();
+ });
+
+ document.getElementById('adminAddAlertBtn').addEventListener('click', () => {
+  adminData.alerts.push({ critical: false, title: '⚠️ 新告警', desc: '请填写描述', time: '刚刚' });
+  renderAdminAlerts();
+ });
+
+ // 从表单读取设备数据
+ function collectDevices() {
+  return Array.from(document.querySelectorAll('#adminDeviceList .admin-device-row')).map(row => ({
+   name: row.querySelector('.dev-name').value,
+   meta: row.querySelector('.dev-meta').value,
+   status: row.querySelector('.dev-status').value
+  }));
+ }
+
+ // 从表单读取告警数据
+ function collectAlerts() {
+  return Array.from(document.querySelectorAll('#adminAlertList .admin-alert-row')).map(row => {
+   const parts = row.querySelector('.alert-content').value.split('|');
+   return {
+    critical: row.querySelector('.alert-level').value === '1',
+    title: (parts[0] || '').trim(),
+    desc: (parts[1] || '').trim(),
+    time: (parts[2] || '刚刚').trim()
+   };
+  });
+ }
+
+ // 应用数据到仪表盘
+ function applyAdminData() {
+  const wt = parseFloat(document.getElementById('adminWaterTemp').value);
+  const et = parseInt(document.getElementById('adminEarTag').value);
+  const bat = parseInt(document.getElementById('adminBattery').value);
+  const td = parseInt(document.getElementById('adminTaskDone').value);
+  const tt = parseInt(document.getElementById('adminTaskTotal').value);
+
+  if (!isNaN(wt)) { waterTempEl.textContent = wt.toFixed(1) + '°C'; adminData.waterTemp = wt; }
+  const wtr = document.getElementById('adminWaterTrend').value;
+  if (wtr) { waterTrendEl.textContent = wtr; adminData.waterTrend = wtr; }
+
+  if (!isNaN(et)) { earTagRateEl.textContent = et + '%'; adminData.earTagRate = et; }
+  const etr = document.getElementById('adminEarTrend').value;
+  if (etr) { earTrendEl.textContent = etr; adminData.earTrend = etr; }
+
+  if (!isNaN(bat)) { batteryEl.textContent = bat + '%'; adminData.battery = bat; }
+  const btr = document.getElementById('adminBatteryTrend').value;
+  if (btr) { batteryTrendEl.textContent = btr; adminData.batteryTrend = btr; }
+
+  if (!isNaN(td) && !isNaN(tt)) { taskCountEl.textContent = `${td}/${tt}`; adminData.taskDone = td; adminData.taskTotal = tt; }
+  const ttr = document.getElementById('adminTaskTrend').value;
+  if (ttr) { taskTrendEl.textContent = ttr; adminData.taskTrend = ttr; }
+
+  const cs = document.getElementById('adminClusterStatus').value;
+  if (cs) { clusterStatusText.textContent = cs; adminData.clusterStatus = cs; }
+
+  const ocr = document.getElementById('adminOcrText').value;
+  if (ocr) { ocrPreviewEl.textContent = ocr; adminData.ocrText = ocr; }
+
+  const devs = collectDevices();
+  adminData.devices = devs;
+  renderDevices(devs);
+
+  const alts = collectAlerts();
+  adminData.alerts = alts;
+  renderAlerts(alts);
+
+  // 推送消息
+  const pushData = {
+   channel: document.getElementById('adminPushChannel').value,
+   title: document.getElementById('adminPushTitle').value,
+   content: document.getElementById('adminPushContent').value,
+   readBy: parseInt(document.getElementById('adminPushReadBy').value) || 0,
+   feedback: document.getElementById('adminPushFeedback').value
+  };
+  Object.assign(adminData, { pushChannel: pushData.channel, pushTitle: pushData.title, pushContent: pushData.content, pushReadBy: pushData.readBy, pushFeedback: pushData.feedback });
+  renderPushMessage(pushData);
+
+  showToast('✅ 数据已应用到仪表盘');
+  adminOverlay.classList.remove('active');
+ }
+
+ function showToast(msg) {
+  const t = document.createElement('div');
+  t.className = 'admin-toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+ }
+
+ document.getElementById('adminApplyBtn').addEventListener('click', applyAdminData);
+ document.getElementById('adminCloseBtn').addEventListener('click', () => adminOverlay.classList.remove('active'));
+ document.getElementById('adminResetBtn').addEventListener('click', () => {
+  Promise.all([loadStatus(), loadAlerts()]).then(() => {
+   adminData.ocrText = ocrPreviewEl.textContent;
+   fillAdminForm();
+   showToast('🔄 已重置为当前仪表盘数据');
+  });
+ });
+ // 点击遮罩关闭
+ adminOverlay.addEventListener('click', (e) => { if (e.target === adminOverlay) adminOverlay.classList.remove('active'); });
+ // ESC 关闭
+ window.addEventListener('keydown', (e) => { if (e.key === 'Escape') adminOverlay.classList.remove('active'); });
+ })();
+</script>
+</body>
+</html>
