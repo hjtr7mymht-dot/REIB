@@ -18,8 +18,8 @@
   "api_signal_key": "data.signal_dbm",
   "webhook_provider": "wecom",
   "webhook_url": "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=1baeda81-43fd-4b0c-9508-6c479d9b7dbd",
-  "apk_path": "c:\\Users\\wsnbb\\Desktop\\AUTO W\\智巡草原-已修复.apk",
+  "apk_path": "c:\\Users\\wsnbb\\Desktop\\REIB\\智巡草原-已修复.apk",
   "app_package": "com.pasture.inspection",
   "app_activity": "",
-  "debug_always_on": true
+  "debug_always_on": false
 }
