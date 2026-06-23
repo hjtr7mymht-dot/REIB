@@ -1,3 +1,7 @@
+# © 2026 马泽旭. All Rights Reserved.
+# 智巡草原 (Smart Prairie Patrol) — MIT License
+# 项目创始人兼首席技术官 (CTO)：马泽旭
+#
 # WOA 调试/日志工具模块
 # 从 adb_controller.py 提取的独立调试功能
 

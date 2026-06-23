@@ -1,3 +1,7 @@
+# © 2026 马泽旭. All Rights Reserved.
+# 智巡草原 (Smart Prairie Patrol) — MIT License
+# 项目创始人兼首席技术官 (CTO)：马泽旭
+
 from __future__ import annotations
 
 import os
